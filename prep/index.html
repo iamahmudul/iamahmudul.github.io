@@ -111,8 +111,8 @@
 
 <div class="wrap">
   <header>
-    <h1>Prep tracker — 8 weeks to interview-ready</h1>
-    <p class="sub">Md Mahmudul Islam · Senior Backend / Technical Lead · United States &amp; Canada</p>
+    <h1>Prep tracker to interview-ready</h1>
+    <p class="sub">Md Mahmudul Islam · Senior Backend / Technical Lead</p>
     <div class="meter">
       <span class="meter-num" id="pct">0%</span>
       <span class="meter-lab" id="pctlab">0 of 0 items checked</span>
@@ -828,18 +828,18 @@ function itemIds(){
 }
 const ALL_IDS = itemIds();
 
-async function load(){
+function load(){
   try{
-    const r = await localStorage.get(KEY);
-    if(r && r.value){ const p = JSON.parse(r.value); state.checked = p.checked||{}; state.open = p.open||{}; }
-  }catch(e){ /* first run, nothing stored */ }
+    const raw = localStorage.getItem(KEY);
+    if(raw){ const p = JSON.parse(raw); state.checked = p.checked||{}; state.open = p.open||{}; }
+  }catch(e){}
 }
 function save(){
   clearTimeout(saveTimer);
   $("#save").textContent = "Saving…";
-  saveTimer = setTimeout(async ()=>{
-    try{ await localStorage.set(KEY, JSON.stringify(state)); $("#save").textContent = "Saved"; }
-    catch(e){ $("#save").textContent = "Not saved — progress is session-only"; }
+  saveTimer = setTimeout(()=>{
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); $("#save").textContent = "Saved"; }
+    catch(e){ $("#save").textContent = "Not saved"; }
   }, 400);
 }
 
@@ -989,10 +989,10 @@ function toggleLine(line){
   renderPanel(); renderTabs(); renderMeter();
 }
 
-$("#reset").addEventListener("click", async ()=>{
+$("#reset").addEventListener("click", ()=>{
   if(!confirm("Clear every checkbox? This cannot be undone.")) return;
   state = {checked:{}, open:{}};
-  try{ await localStorage.delete(KEY); }catch(e){}
+  try{ localStorage.removeItem(KEY); }catch(e){}
   renderAll();
 });
 
