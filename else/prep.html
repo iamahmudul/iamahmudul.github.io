@@ -830,7 +830,7 @@ const ALL_IDS = itemIds();
 
 async function load(){
   try{
-    const r = await window.storage.get(KEY);
+    const r = await localStorage.get(KEY);
     if(r && r.value){ const p = JSON.parse(r.value); state.checked = p.checked||{}; state.open = p.open||{}; }
   }catch(e){ /* first run, nothing stored */ }
 }
@@ -838,7 +838,7 @@ function save(){
   clearTimeout(saveTimer);
   $("#save").textContent = "Saving…";
   saveTimer = setTimeout(async ()=>{
-    try{ await window.storage.set(KEY, JSON.stringify(state)); $("#save").textContent = "Saved"; }
+    try{ await localStorage.set(KEY, JSON.stringify(state)); $("#save").textContent = "Saved"; }
     catch(e){ $("#save").textContent = "Not saved — progress is session-only"; }
   }, 400);
 }
@@ -992,7 +992,7 @@ function toggleLine(line){
 $("#reset").addEventListener("click", async ()=>{
   if(!confirm("Clear every checkbox? This cannot be undone.")) return;
   state = {checked:{}, open:{}};
-  try{ await window.storage.delete(KEY); }catch(e){}
+  try{ await localStorage.delete(KEY); }catch(e){}
   renderAll();
 });
 
