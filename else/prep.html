@@ -1,0 +1,1010 @@
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --paper:#eef1f4;
+    --surface:#ffffff;
+    --ink:#17222c;
+    --muted:#61717f;
+    --rule:#d3dbe1;
+    --rule-soft:#e6ebee;
+    --green:#14663f;
+    --green-soft:#e2efe8;
+    --blue:#17527d;
+    --amber:#8a5a12;
+    --sans: ui-sans-serif, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px 96px}
+
+  /* ---------- masthead ---------- */
+  header{padding:34px 0 18px;border-bottom:1px solid var(--rule)}
+  h1{font-size:26px;font-weight:650;letter-spacing:-0.02em;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:14px;margin:0}
+  .meter{margin-top:20px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .meter-num{font-family:var(--mono);font-size:34px;font-weight:600;color:var(--green);letter-spacing:-0.03em;line-height:1}
+  .meter-lab{color:var(--muted);font-size:13px}
+  .bar{height:6px;background:var(--rule-soft);border-radius:3px;overflow:hidden;margin-top:12px}
+  .bar > i{display:block;height:100%;background:var(--green);width:0;transition:width .35s ease}
+
+  /* ---------- tabs ---------- */
+  nav{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--rule);
+      display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;padding-top:4px}
+  nav::-webkit-scrollbar{display:none}
+  nav button{flex:0 0 auto;background:none;border:0;border-bottom:2px solid transparent;
+      padding:12px 14px;font:inherit;font-size:14px;color:var(--muted);cursor:pointer;white-space:nowrap}
+  nav button:hover{color:var(--ink)}
+  nav button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--blue);font-weight:600}
+  nav button .cnt{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:6px}
+
+  /* ---------- filter ---------- */
+  .filters{display:flex;gap:6px;flex-wrap:wrap;padding:16px 0 4px}
+  .chip{border:1px solid var(--rule);background:var(--surface);border-radius:999px;padding:5px 11px;
+        font:inherit;font-size:12.5px;color:var(--muted);cursor:pointer}
+  .chip[data-on="1"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  /* ---------- day / group cards ---------- */
+  .weekhead{display:flex;align-items:baseline;gap:12px;margin:30px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--rule)}
+  .weekhead h2{font-size:15px;font-weight:650;margin:0;letter-spacing:.01em}
+  .weekhead span{color:var(--muted);font-size:13px}
+
+  .day{background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--rule);
+       border-radius:4px;margin-bottom:8px;overflow:hidden}
+  .day.done{border-left-color:var(--green);background:var(--green-soft)}
+  .day.rest{border-left-color:var(--amber)}
+  .dayhead{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;user-select:none}
+  .dnum{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted);
+        border:1px solid var(--rule);border-radius:3px;padding:3px 6px;min-width:38px;text-align:center;background:var(--surface)}
+  .day.done .dnum{color:var(--green);border-color:var(--green)}
+  .dtitle{flex:1;font-weight:600;font-size:14.5px}
+  .dcount{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .caret{color:var(--muted);font-size:11px;transition:transform .18s}
+  .day[data-open="1"] .caret{transform:rotate(90deg)}
+  .items{display:none;padding:0 14px 10px}
+  .day[data-open="1"] .items{display:block}
+
+  /* ---------- checkable line ---------- */
+  .line{display:flex;gap:11px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--rule-soft);cursor:pointer}
+  .line:first-child{border-top:0}
+  .box{flex:0 0 auto;width:17px;height:17px;margin-top:2px;border:1.5px solid #a9b6c1;border-radius:3px;
+       background:var(--surface);position:relative}
+  .line[data-on="1"] .box{background:var(--green);border-color:var(--green)}
+  .line[data-on="1"] .box::after{content:"";position:absolute;left:5px;top:1px;width:4px;height:9px;
+       border:solid #fff;border-width:0 2px 2px 0;transform:rotate(43deg)}
+  .txt{flex:1;font-size:14.5px}
+  .line[data-on="1"] .txt{color:var(--muted);text-decoration:line-through;text-decoration-color:#b4c0ca}
+  .tag{flex:0 0 auto;font-size:10.5px;letter-spacing:.02em;color:var(--muted);border:1px solid var(--rule);
+       border-radius:3px;padding:1px 6px;margin-top:2px;white-space:nowrap;background:var(--surface)}
+  .tag.code{color:var(--blue);border-color:#bcd0e0}
+  .tag.design{color:#5d3a86;border-color:#d3c8e3}
+  .tag.core{color:#7a4a12;border-color:#e0d0ba}
+  .tag.behav{color:#96442f;border-color:#e6cabe}
+  .tag.job{color:var(--green);border-color:#bcd8c9}
+
+  /* ---------- flat checklist sections ---------- */
+  .note{background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--blue);
+        border-radius:4px;padding:14px 16px;margin:18px 0;font-size:14.5px}
+  .note strong{display:block;margin-bottom:4px}
+  .grp{background:var(--surface);border:1px solid var(--rule);border-radius:4px;margin-bottom:8px}
+  .grphead{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none}
+  .grphead h3{flex:1;font-size:14.5px;font-weight:650;margin:0}
+  .grp .items{padding:0 14px 10px}
+  .grp[data-open="1"] .items{display:block}
+  .grp[data-open="1"] .caret{transform:rotate(90deg)}
+
+  /* ---------- footer bar ---------- */
+  .footer{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--rule);
+          padding:9px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px;z-index:30}
+  .footer .status{color:var(--muted);font-family:var(--mono);font-size:12px}
+  .footer button{background:none;border:1px solid var(--rule);border-radius:4px;padding:6px 11px;
+                 font:inherit;font-size:12.5px;color:var(--muted);cursor:pointer}
+  .footer button:hover{color:#8c2f1d;border-color:#d9b5ad}
+  :focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  @media (max-width:600px){
+    h1{font-size:21px}
+    .meter-num{font-size:28px}
+    .txt{font-size:14px}
+    .tag{display:none}
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Prep tracker — 8 weeks to interview-ready</h1>
+    <p class="sub">Md Mahmudul Islam · Senior Backend / Technical Lead · United States &amp; Canada</p>
+    <div class="meter">
+      <span class="meter-num" id="pct">0%</span>
+      <span class="meter-lab" id="pctlab">0 of 0 items checked</span>
+    </div>
+    <div class="bar"><i id="barfill"></i></div>
+  </header>
+
+  <nav id="tabs"></nav>
+  <div id="panel"></div>
+</div>
+
+<div class="footer">
+  <span class="status" id="save">Ready</span>
+  <button id="reset">Clear all progress</button>
+</div>
+
+<script>
+/* ============================== DATA ============================== */
+
+const T = {code:"Coding", design:"System design", lld:"Machine coding", core:"Core topic",
+           behav:"Behavioural", job:"Job search", build:"Build &amp; ship", prep:"Interview prep",
+           read:"Reading", rest:"Rest", admin:"Admin"};
+
+const DAYS = [
+{w:1,d:1,t:"Resume surgery + first problems",i:[
+ ["job","Restructure resume: Professional Experience (NexKraft, Artomus) first, Research &amp; Academic (BCI Lab, SCSU) second"],
+ ["job","Rewrite every bullet with a number: requests/day, users, latency drop, cost saved, team size, release cadence"],
+ ["job","Fix the Kafka claim — add a real Kafka bullet under NexKraft or remove it from the summary"],
+ ["job","Change title from &ldquo;Software Engineer (AI Enabled)&rdquo; to &ldquo;Senior Software Engineer | Technical Lead&rdquo;"],
+ ["admin","Email your DSO at St. Cloud State: OPT unemployment days used, travel abroad, STEM OPT eligibility"],
+ ["code","Arrays warm-up — 5 easy problems, write complexity for each"],
+ ["design","Learn the 7-step HLD framework and write it on an index card you keep on your desk"]]},
+
+{w:1,d:2,t:"Two resumes + estimation math",i:[
+ ["job","Build resume version A — Java / Spring / distributed backend"],
+ ["job","Build resume version B — AI &amp; ML engineering"],
+ ["job","Cut the skills section from ~70 technologies to ~30 you can defend under questioning"],
+ ["job","Add a one-line entry covering the Jul 2024 – Jan 2025 gap (full-time MS student)"],
+ ["code","Two pointers — 6 problems"],
+ ["design","Capacity estimation drills: QPS, storage per year, bandwidth, server count. Do 5 from memory."]]},
+
+{w:1,d:3,t:"Pipeline setup, US and Canada",i:[
+ ["job","LinkedIn: headline, About section, and experience rewritten to match the new resume"],
+ ["job","Turn on &ldquo;Open to work&rdquo; for United States and Canada, both remote and onsite"],
+ ["job","Build the target list: 40 US companies + 25 Canadian companies"],
+ ["job","Set up an application tracker (company, role, country, date, source, referral, status, follow-up date)"],
+ ["code","Hashing and frequency maps — 6 problems"],
+ ["design","Design a URL shortener end to end, out loud, 40 minutes"]]},
+
+{w:1,d:4,t:"Threads and pools",i:[
+ ["core","Thread lifecycle, ExecutorService, ThreadPoolExecutor parameters, pool sizing for CPU vs IO bound work"],
+ ["core","Runnable vs Callable, Future, shutdown vs shutdownNow, rejection policies, ThreadLocal and its leak risk"],
+ ["code","Sliding window — 6 problems"],
+ ["design","URL shortener deep dive: ID generation, sharding, cache layer, custom aliases, analytics"],
+ ["job","5 applications (3 US, 2 Canada)"]]},
+
+{w:1,d:5,t:"Java Memory Model",i:[
+ ["core","JMM: volatile, happens-before, visibility vs atomicity vs ordering, instruction reordering"],
+ ["core","Atomic classes, compare-and-swap, the ABA problem, LongAdder, false sharing and @Contended"],
+ ["code","Prefix sum and difference arrays — 6 problems"],
+ ["design","Design a rate limiter: token bucket, leaky bucket, sliding window log vs counter, distributed variant"],
+ ["behav","Write STAR stories 1–2: biggest technical achievement, biggest failure and what changed after"]]},
+
+{w:1,d:6,t:"Locks and async",i:[
+ ["core","synchronized vs ReentrantLock, ReadWriteLock, StampedLock, Condition, fairness"],
+ ["core","Deadlock, livelock, starvation — how each happens, how you detect it, how you prevent it"],
+ ["core","CompletableFuture: chaining, combining, exception handling, custom executors, ForkJoinPool internals"],
+ ["code","Binary search patterns — 6 problems including search on answer space"],
+ ["design","Design a distributed job scheduler with retries and exactly-once execution"],
+ ["job","5 applications"]]},
+
+{w:1,d:7,t:"Rest day",r:1,i:[
+ ["rest","Full day off. No laptop, no LeetCode. This is part of the plan, not a break from it."],
+ ["read","Optional, 45 minutes: Designing Data-Intensive Applications, Chapter 1"]]},
+
+{w:2,d:8,t:"Virtual threads",i:[
+ ["core","Virtual threads: carrier threads, mounting and unmounting, pinning, structured concurrency"],
+ ["core","When virtual threads beat reactive/WebFlux and when they do not — be able to argue both sides"],
+ ["code","Linked lists — 6 problems, including in-place reversal and cycle detection"],
+ ["design","Design a news feed: fan-out on write vs fan-out on read, hybrid approach"],
+ ["job","5 applications"]]},
+
+{w:2,d:9,t:"Modern Java features",i:[
+ ["core","Records, sealed classes and interfaces, pattern matching for switch, text blocks, enhanced instanceof"],
+ ["core","Optional used correctly: the anti-patterns, when to return it, when never to use it as a field or parameter"],
+ ["code","Stacks, queues and monotonic stack — 6 problems"],
+ ["design","Design a chat system: WebSocket connections, presence, delivery receipts, message ordering, offline delivery"],
+ ["behav","Stories 3–4: a conflict with a peer engineer, a time you mentored someone into a better engineer"]]},
+
+{w:2,d:10,t:"Streams and functional Java",i:[
+ ["core","Streams in depth: collectors, groupingBy, partitioningBy, custom collectors, lazy evaluation, short-circuiting"],
+ ["core","Functional programming in Java: composition, immutability, when parallel streams actively hurt performance"],
+ ["code","Trees part 1 — traversals, depth, level order — 6 problems"],
+ ["design","Design a notification service: push, email, SMS, templating, fan-out, retry, user preferences"],
+ ["job","5 applications"]]},
+
+{w:2,d:11,t:"Garbage collection and heap",i:[
+ ["core","Heap structure, generational hypothesis, minor vs major vs full GC, G1 vs ZGC vs Shenandoah"],
+ ["core","Stack vs heap vs metaspace, escape analysis, common GC tuning flags and what each actually does"],
+ ["code","Trees part 2 — BST, lowest common ancestor, path sums — 6 problems"],
+ ["design","News feed deep dive: the celebrity problem, ranking, caching strategy, pagination"],
+ ["job","5 applications"]]},
+
+{w:2,d:12,t:"Debugging production",i:[
+ ["core","Heap dump analysis with Eclipse MAT: dominator tree, finding a real memory leak"],
+ ["core","Reading a thread dump, jstat, jmap, jcmd, async-profiler, flame graphs, identifying a stuck thread"],
+ ["code","Heaps and priority queues — 6 problems, including top-K and merge-K"],
+ ["design","Design a metrics and monitoring system (write path, aggregation, query, retention)"],
+ ["behav","Story 5: a production outage or OOM you led the response on. Timeline, decisions, what you changed after."]]},
+
+{w:2,d:13,t:"Collections internals + first mock",i:[
+ ["core","HashMap internals: hashing, resize, treeify. ConcurrentHashMap, CopyOnWriteArrayList, the BlockingQueue family"],
+ ["core","Fast pass (90 min total): Foreign Function &amp; Memory API, Data Oriented Programming, OpenRewrite"],
+ ["code","Mock coding interview: 2 problems in 45 minutes, timed, talking out loud the whole time"],
+ ["design","Redo the URL shortener out loud in 40 minutes with no notes. Record it and listen back."],
+ ["job","5 applications"]]},
+
+{w:2,d:14,t:"Rest day",r:1,i:[
+ ["rest","Day off"],
+ ["read","Optional: DDIA Chapter 2 — data models and query languages"]]},
+
+{w:3,d:15,t:"Spring core",i:[
+ ["core","IoC container, bean lifecycle, scopes, BeanPostProcessor, AOP and how proxies actually work"],
+ ["core","@Transactional: propagation levels, isolation, the self-invocation trap, rollback rules, read-only"],
+ ["code","Graphs — BFS and DFS — 6 problems"],
+ ["design","Design a ride-hailing system (Uber): matching, location updates, trip lifecycle"],
+ ["job","5 applications"]]},
+
+{w:3,d:16,t:"JPA and Hibernate",i:[
+ ["core","Spring Data JPA: the N+1 problem, fetch strategies, @EntityGraph, DTO projections, pagination pitfalls"],
+ ["core","Hibernate: first and second level cache, dirty checking, batch inserts, lazy loading outside a session"],
+ ["code","Graphs advanced — topological sort and union-find — 6 problems"],
+ ["design","Design a payment system: idempotency, double-entry ledger, reconciliation, PSP failover"],
+ ["behav","Stories 6–7: disagreeing with your manager, a deadline you missed and how you handled it"]]},
+
+{w:3,d:17,t:"Spring Security + ship something",i:[
+ ["core","Filter chain, AuthenticationManager, UserDetailsService, AuthenticationProvider, SecurityContext"],
+ ["core","Method-level security, CSRF, CORS, stateless vs session, password encoding"],
+ ["build","Build a small JWT-secured Spring Boot API with refresh tokens today and push it to GitHub"],
+ ["code","Backtracking — 5 problems"],
+ ["design","Ride-hailing deep dive: geospatial indexing (geohash, quadtree, S2), matching algorithm, surge pricing"]]},
+
+{w:3,d:18,t:"Transactions and locking",i:[
+ ["core","ACID in depth, all four isolation levels, dirty read, non-repeatable read, phantom read"],
+ ["core","MVCC, optimistic vs pessimistic locking, database deadlocks, row vs table vs gap locks"],
+ ["code","Dynamic programming part 1 — 1D DP — 5 problems"],
+ ["design","Design a distributed unique ID generator, then a web crawler"],
+ ["job","5 applications"]]},
+
+{w:3,d:19,t:"Indexing and query performance",i:[
+ ["core","B-tree indexes, composite index column order, covering indexes, cardinality, when an index hurts writes"],
+ ["core","Reading EXPLAIN plans, query optimisation, connection pooling and how to size HikariCP correctly"],
+ ["core","Polling vs change data capture vs the transactional outbox pattern"],
+ ["code","Dynamic programming part 2 — 2D DP — 5 problems"],
+ ["design","Design search autocomplete: trie, ranking, caching, updating suggestions"]]},
+
+{w:3,d:20,t:"Mock day",i:[
+ ["code","Mock coding interview — 2 problems, timed, out loud"],
+ ["design","Mock system design interview — full 45 minutes, one design, no notes"],
+ ["behav","Stories 8–9: growing or scaling your team, a technical call you got wrong"],
+ ["job","5 applications and 5 cold messages to engineers at target companies (not recruiters)"]]},
+
+{w:3,d:21,t:"Rest day",r:1,i:[["rest","Day off"],["read","Optional: DDIA Chapter 3 — storage and retrieval"]]},
+
+{w:4,d:22,t:"Distributed systems foundations",i:[
+ ["core","CAP and PACELC, consistency models: strong, eventual, causal, read-your-writes, monotonic reads"],
+ ["core","Quorum reads and writes, leader election, replication lag, split brain, fencing tokens"],
+ ["code","Intervals and greedy — 5 problems"],
+ ["design","Design a distributed cache with consistent hashing and replication"],
+ ["job","5 applications"]]},
+
+{w:4,d:23,t:"Kafka architecture",i:[
+ ["core","Brokers, topics, partitions, replicas, ISR, leader and follower, controller"],
+ ["core","Consumer groups, rebalancing (and how to avoid it), offset management, retention, log compaction"],
+ ["code","Matrix and simulation — 5 problems"],
+ ["design","Design a message queue from scratch — this is the question that proves you understand Kafka"],
+ ["behav","Stories 10–11: a difficult stakeholder, arguing successfully for tech debt or refactoring time"]]},
+
+{w:4,d:24,t:"Kafka guarantees + build",i:[
+ ["core","Idempotent producer, transactions, exactly-once semantics, ordering guarantees within a partition"],
+ ["core","DLQ handling, poison messages, consumer lag monitoring, backpressure, Kafka Streams basics"],
+ ["build","Build a producer/consumer with retry, backoff and a dead letter queue. Push to GitHub."],
+ ["code","Bit manipulation — 4 problems"],
+ ["design","Write a one-page Kafka vs RabbitMQ vs SQS comparison you can defend in an interview"]]},
+
+{w:4,d:25,t:"Caching",i:[
+ ["core","Redis data structures and when each one is the right choice"],
+ ["core","Cache-aside vs write-through vs write-behind, invalidation, TTL strategy, cache stampede and how to stop it"],
+ ["core","Distributed locks, Redlock and the well-known criticism of it, Redis persistence (RDB vs AOF), clustering"],
+ ["code","Weak-area revision — 6 problems from whichever pattern you scored worst on"],
+ ["design","Design a real-time leaderboard for 50 million users"]]},
+
+{w:4,d:26,t:"Scaling data",i:[
+ ["core","Replication, read replicas, failover, replication lag and reading your own writes"],
+ ["core","Sharding strategies, consistent hashing, hot keys, resharding, when NoSQL wins and when it does not"],
+ ["code","Revision — 6 problems across your two weakest patterns"],
+ ["design","Design a high write throughput analytics pipeline (ad click aggregation)"],
+ ["job","5 applications"]]},
+
+{w:4,d:27,t:"Mock day + video streaming",i:[
+ ["code","Mock coding interview — timed"],
+ ["design","Design a video streaming platform: chunking, HLS/DASH, adaptive bitrate, CDN, transcoding pipeline"],
+ ["behav","Stories 12–14: why you left NexKraft, the study period, why you want this specific company"],
+ ["read","DDIA Chapter 4 — encoding and evolution"]]},
+
+{w:4,d:28,t:"Rest day",r:1,i:[["rest","Day off"]]},
+
+{w:5,d:29,t:"Design depth 1",i:[
+ ["design","Design Twitter/X end to end, including timelines, trends and search"],
+ ["core","SOLID — write one real example of each principle from your own NexKraft code, not a textbook example"],
+ ["code","Trees revision, harder problems — 5"],
+ ["job","5 applications"]]},
+
+{w:5,d:30,t:"Design depth 2",i:[
+ ["design","Design Google Drive / Dropbox: chunking, deduplication, sync, conflict resolution, sharing permissions"],
+ ["core","Patterns: Strategy, Factory, Abstract Factory, Builder, Singleton, Template Method"],
+ ["code","Graphs revision — 5 problems"],
+ ["behav","Rehearse stories 1–5 out loud, record yourself, listen back and cut the rambling"]]},
+
+{w:5,d:31,t:"Design depth 3",i:[
+ ["design","Redo the video streaming design at full depth, including live streaming as a follow-up"],
+ ["core","Patterns: Observer, Decorator, Adapter, Proxy, Chain of Responsibility, Command, State"],
+ ["code","DP revision — 5 problems"],
+ ["job","5 applications"]]},
+
+{w:5,d:32,t:"Machine coding 1",i:[
+ ["lld","Machine coding: parking lot system in Java. 90 minutes. Clean, extensible, unit tested."],
+ ["core","Domain Driven Design: bounded contexts, aggregates, entities vs value objects, ubiquitous language"],
+ ["code","4 problems"],
+ ["design","Design an e-commerce order system"]]},
+
+{w:5,d:33,t:"Machine coding 2",i:[
+ ["lld","Machine coding: LRU cache and a rate limiter in Java. 90 minutes."],
+ ["core","CQRS, event sourcing, saga pattern — choreography vs orchestration, compensating transactions"],
+ ["code","4 problems"],
+ ["design","Order system deep dive: saga across payment, inventory and shipping, with failure at every step"]]},
+
+{w:5,d:34,t:"Mock day",i:[
+ ["code","Mock coding — 2 problems, timed"],
+ ["design","Mock system design — full 45 minutes with a peer or recorded"],
+ ["core","Strangler fig pattern, legacy modernisation, how you would break a monolith apart and in what order"],
+ ["read","DDIA Chapter 5 — replication"]]},
+
+{w:5,d:35,t:"Rest day",r:1,i:[["rest","Day off"]]},
+
+{w:6,d:36,t:"Identity and tokens",i:[
+ ["core","Authentication vs authorisation, session vs token, RBAC vs ABAC, IAM concepts and least privilege"],
+ ["core","JWT structure, HS256 vs RS256, claims, expiry, refresh token rotation, revocation, the common JWT mistakes"],
+ ["code","5 problems"],
+ ["design","Design an authentication service used by 12 internal products"],
+ ["job","5 applications"]]},
+
+{w:6,d:37,t:"OAuth2, OIDC, SAML",i:[
+ ["core","OAuth2 flows: authorization code with PKCE, client credentials, device flow. Why implicit is dead."],
+ ["core","OIDC vs OAuth2 vs SAML — when each is the right answer. Draw all three flows from memory on paper."],
+ ["code","5 problems"],
+ ["design","Design single sign-on across multiple products and an external partner"],
+ ["behav","Rehearse stories 6–10 out loud"]]},
+
+{w:6,d:38,t:"Crypto and transport security",i:[
+ ["core","Symmetric vs asymmetric crypto, the TLS handshake step by step, certificates and the CA chain, mTLS"],
+ ["core","Secure cookies (HttpOnly, SameSite, Secure), CORS vs CSRF, secrets management, key rotation"],
+ ["code","5 problems"],
+ ["design","Design a system handling PII: encryption at rest and in transit, key management, GDPR right to delete"]]},
+
+{w:6,d:39,t:"OWASP and hardening",i:[
+ ["core","OWASP Top 10 — write a concrete Spring-level fix for every single one"],
+ ["core","Dependency scanning, secure configuration, secrets in CI, penetration testing basics, threat modelling"],
+ ["code","5 problems"],
+ ["design","Design a multi-tenant SaaS: tenant isolation, noisy neighbour, per-tenant rate limits and data residency"],
+ ["job","5 applications"]]},
+
+{w:6,d:40,t:"Resilience and observability",i:[
+ ["core","Circuit breaker, retry with exponential backoff and jitter, bulkhead, timeout, fallback, Resilience4j"],
+ ["core","Idempotency keys, safely handling a duplicate request, handling 429 from an external API, client-side throttling"],
+ ["core","Metrics vs logs vs traces, OpenTelemetry, RED and USE methods, SLI/SLO/error budget, alert design"],
+ ["core","Datadog, Dynatrace, New Relic, Grafana, Prometheus — what each is actually for"],
+ ["code","5 problems"],
+ ["design","Take any earlier design and add complete fault tolerance. Name every failure mode."]]},
+
+{w:6,d:41,t:"Testing + mock",i:[
+ ["core","Test pyramid, unit vs integration, Testcontainers, contract testing with Pact, mutation testing"],
+ ["core","Load testing with k6 or JMeter, smoke, regression, chaos testing, what you actually did at NexKraft"],
+ ["code","Mock coding — timed"],
+ ["design","Mock system design — a security-heavy prompt"],
+ ["read","DDIA Chapter 6 — partitioning"]]},
+
+{w:6,d:42,t:"Rest day",r:1,i:[["rest","Day off"]]},
+
+{w:7,d:43,t:"HTTP and API design",i:[
+ ["core","HTTP verbs, POST vs PUT vs PATCH, safe vs idempotent, status codes and what each really signals"],
+ ["core","Pagination (offset vs cursor), versioning strategies, HATEOAS, gRPC vs REST vs GraphQL, API performance tuning"],
+ ["code","5 problems"],
+ ["design","Design a public API platform with authentication, rate limiting and quotas"],
+ ["job","Canada push: 10 applications to Canadian companies today"]]},
+
+{w:7,d:44,t:"AWS",i:[
+ ["core","SQS: visibility timeout, long polling, FIFO vs standard, DLQ. SNS and fan-out patterns."],
+ ["core","Lambda: cold starts, concurrency limits, when serverless is wrong. EC2 vs ECS vs EKS. ALB, VPC, IAM roles."],
+ ["code","5 problems"],
+ ["design","Design an event-driven order pipeline entirely on AWS managed services"],
+ ["behav","Rehearse stories 11–14 out loud"]]},
+
+{w:7,d:45,t:"Containers and delivery",i:[
+ ["core","Docker: images, layers, multi-stage builds, networking, image size and security"],
+ ["core","Kubernetes: pods, deployments, services, ingress, HPA, ConfigMaps, secrets, liveness and readiness probes"],
+ ["core","Terraform basics, CI/CD pipeline design, blue-green vs canary vs rolling deployment"],
+ ["code","5 problems"],
+ ["design","Design a deployment pipeline for 30 microservices across 3 environments"]]},
+
+{w:7,d:46,t:"RAG, properly",i:[
+ ["core","RAG architecture, chunking strategies and overlap, embedding model selection, vector DB tradeoffs"],
+ ["core","Hybrid search, reranking, context window management, evaluation metrics for retrieval"],
+ ["prep","Defend your Document Intelligence Platform for 30 minutes. Write down every follow-up you stumble on."],
+ ["code","5 problems"],
+ ["design","Design a RAG system over 10 million documents with sub-second latency"]]},
+
+{w:7,d:47,t:"Agents and LLM systems",i:[
+ ["core","Agent architectures, tool calling, MCP, LangGraph state machines, multi-agent coordination and failure modes"],
+ ["core","Evaluating a non-deterministic system, hallucination mitigation, guardrails, cost and latency optimisation, prompt versioning"],
+ ["prep","Defend your Multi-Agent Engineering System for 30 minutes"],
+ ["code","5 problems"],
+ ["design","Design an LLM serving platform: batching, caching, fallback models, cost controls"]]},
+
+{w:7,d:48,t:"Runtimes + mock",i:[
+ ["core","Node event loop vs Java threading, Netty, reactive WebFlux vs virtual threads — argue both sides"],
+ ["core","Networking: TCP vs UDP, DNS, L4 vs L7 load balancing, keep-alive, what happens when you type a URL"],
+ ["code","Mock coding — timed"],
+ ["design","Mock system design — an AI plus backend hybrid prompt"],
+ ["job","5 applications"]]},
+
+{w:7,d:49,t:"Rest day",r:1,i:[["rest","Day off"],["read","DDIA Chapter 7 — transactions"]]},
+
+{w:8,d:50,t:"Project defence",i:[
+ ["prep","Attack every NexKraft resume bullet with hostile follow-ups. Note every stumble in writing."],
+ ["prep","Do the same for the BCI Lab work and the SCSU automation role"],
+ ["code","5 problems"],
+ ["design","Redo your two weakest designs from scratch"],
+ ["job","5 applications"]]},
+
+{w:8,d:51,t:"Behavioural finalisation",i:[
+ ["behav","Finalise all 14 stories with a 2-minute version and a 6-minute version of each"],
+ ["behav","Leadership specifics: how you ran sprint planning, handled an underperformer, set technical direction"],
+ ["behav","Write 10 sharp reverse questions to ask your interviewers"],
+ ["code","5 problems"],
+ ["design","Design review practice: critique a deliberately bad architecture out loud"]]},
+
+{w:8,d:52,t:"Weak-area day",i:[
+ ["prep","Go back to every topic you rated 1 or 2 in your own tracking. Fix them."],
+ ["code","5 problems from your single worst pattern"],
+ ["design","One design from the domain you avoid most"],
+ ["job","5 applications"]]},
+
+{w:8,d:53,t:"Endurance day",i:[
+ ["code","Full mock contest: 3 problems in 90 minutes"],
+ ["design","Two HLD designs back to back, 40 minutes each, no break between them"],
+ ["prep","Review your notes from Day 50 — are the stumbles gone?"]]},
+
+{w:8,d:54,t:"Offers and logistics",i:[
+ ["job","Salary research: US bands and Canadian bands for senior/lead. Know the numbers before anyone asks."],
+ ["job","Script your answer to &ldquo;what are your compensation expectations&rdquo; for both countries"],
+ ["job","Script the sponsorship conversation: H-1B, cap-exempt employers, Canadian work permit, remote contracting"],
+ ["job","Deep research your top 15 targets: products, tech blog, recent news, who you know there"],
+ ["code","5 problems"]]},
+
+{w:8,d:55,t:"Full loop simulation",i:[
+ ["code","Simulated loop, round 1: coding"],
+ ["design","Simulated loop, round 2: system design"],
+ ["lld","Simulated loop, round 3: machine coding or deep dive"],
+ ["behav","Simulated loop, round 4: behavioural with a hiring manager"],
+ ["prep","Written retrospective of all 8 weeks: what you know cold, what is still shaky, what you will keep drilling"]]},
+
+{w:8,d:56,t:"Rest, then go loud",r:1,i:[
+ ["rest","Day off"],
+ ["job","From tomorrow: interviews are the primary activity. Study becomes maintenance, not the main job."]]}
+];
+
+const CODING = {
+title:"Coding — pattern by pattern",
+intro:"Roughly 200 problems. Do them by pattern, not at random. A pattern is done when you can recognise it from the problem statement in under 60 seconds.",
+groups:[
+ ["Linear structures",[
+  "Arrays and two pointers — 12 problems",
+  "Sliding window, fixed and variable — 8 problems",
+  "Prefix sum and difference arrays — 6 problems",
+  "Hashing and frequency counting — 10 problems",
+  "Sorting, intervals and merging — 8 problems",
+  "Binary search, including search on the answer space — 12 problems",
+  "Linked lists: reversal, cycle detection, merge — 10 problems",
+  "Stacks, queues and monotonic stack — 10 problems",
+  "Matrix and simulation — 6 problems"]],
+ ["Trees and graphs",[
+  "Binary tree traversals and recursion — 10 problems",
+  "BST properties, LCA, path problems — 8 problems",
+  "Tries — 5 problems",
+  "Heaps, top-K and merge-K — 8 problems",
+  "Graph BFS and DFS — 10 problems",
+  "Topological sort — 5 problems",
+  "Union-find / disjoint set — 5 problems",
+  "Shortest path: Dijkstra, Bellman-Ford — 5 problems"]],
+ ["Harder patterns",[
+  "Backtracking: subsets, permutations, N-queens — 10 problems",
+  "Greedy — 8 problems",
+  "1D dynamic programming — 12 problems",
+  "2D dynamic programming, grids and strings — 10 problems",
+  "Bit manipulation — 6 problems",
+  "Math and number theory — 5 problems",
+  "Design problems: LRU, LFU, Trie, iterator, Twitter — 6 problems"]],
+ ["Skills around the code",[
+  "Write Java collections API from memory without googling",
+  "State time and space complexity before writing any code",
+  "Talk continuously while coding — practise this deliberately, it is scored",
+  "Clarify the problem and state assumptions before starting",
+  "Enumerate edge cases before running: empty, single element, duplicates, overflow, negatives",
+  "Dry-run your own code on an example before saying you are done",
+  "Handle a follow-up: &ldquo;now do it in O(1) space&rdquo; without restarting from zero",
+  "10 timed mock sessions completed"]]]};
+
+const DESIGN = {
+title:"System design",
+intro:"Twenty designs, done out loud, with a timer. Reading a solution is not practice. Speaking one is.",
+groups:[
+ ["The framework — do this in order every time",[
+  "Clarify functional requirements and write them down",
+  "Clarify non-functional requirements: scale, latency, consistency, availability",
+  "Back-of-envelope estimation: QPS, storage, bandwidth, server count",
+  "Define the API contract before touching the architecture",
+  "Design the data model and pick the storage engine, with a reason",
+  "Draw the high-level architecture",
+  "Deep dive into the two or three components the interviewer cares about",
+  "Name the bottlenecks, the failure modes and the tradeoffs you accepted"]],
+ ["Building blocks you must be able to explain cold",[
+  "Load balancers, L4 vs L7, health checks",
+  "CDN and edge caching",
+  "Caching layers, eviction, invalidation, stampede protection",
+  "SQL vs NoSQL vs time-series vs graph — choosing with a defensible reason",
+  "Sharding, partitioning, consistent hashing, resharding",
+  "Replication, leader-follower, multi-leader, leaderless",
+  "Message queues and pub/sub, at-least-once vs exactly-once",
+  "Search indexing (Elasticsearch) and when you need it",
+  "Object storage and blob handling",
+  "Rate limiting, quotas and throttling",
+  "Unique ID generation at scale",
+  "Service discovery, API gateway, service mesh",
+  "WebSockets, long polling, server-sent events",
+  "Idempotency and deduplication across services"]],
+ ["The twenty designs",[
+  "URL shortener","Rate limiter","Chat / messaging system","News feed",
+  "Twitter/X with timelines and trends","Instagram with media pipeline",
+  "Video streaming platform (HLS, ABR, CDN, transcoding)","Google Drive / Dropbox",
+  "Uber / ride matching with geospatial index","Yelp / proximity search",
+  "Notification service","Payment system with ledger","Ticket booking with inventory locking",
+  "Distributed cache","Message queue from scratch","Web crawler","Search autocomplete",
+  "Real-time leaderboard","Ad click aggregation pipeline","Distributed job scheduler",
+  "Multi-tenant SaaS platform","RAG platform over 10M documents"]],
+ ["Low-level design and machine coding",[
+  "Parking lot system","LRU and LFU cache","Rate limiter (in-process)","Elevator system",
+  "Splitwise / expense sharing","Vending machine","Chess or tic-tac-toe","Logging framework",
+  "Notification dispatcher with pluggable channels","In-memory key-value store with TTL"]],
+ ["Design judgement for lead and principal roles",[
+  "Domain Driven Design: bounded contexts and aggregates",
+  "CQRS and event sourcing — and when they are overkill",
+  "Saga: choreography vs orchestration, compensating transactions",
+  "Strangler fig and legacy migration sequencing",
+  "Multi-region, active-active vs active-passive, RPO and RTO",
+  "Writing an RFC or design doc that a staff engineer would approve",
+  "Explaining a tradeoff to a non-technical stakeholder in two sentences"]]]};
+
+const BEHAV = {
+title:"Behavioural and leadership",
+intro:"For a Technical Lead title this is not the soft round, it is often the deciding round. Fourteen stories, each with numbers, each rehearsed out loud.",
+groups:[
+ ["The fourteen stories",[
+  "Tell me about yourself — 90 seconds, tuned separately for a recruiter, a hiring manager and an engineer",
+  "Your biggest technical achievement, with the business impact attached",
+  "Your biggest failure and what you concretely changed afterwards",
+  "A time you disagreed with your manager and how it resolved",
+  "A time you disagreed with a peer engineer on a technical decision",
+  "A time you mentored someone into a materially better engineer",
+  "How you handled an underperforming team member",
+  "A deadline you missed, or a project that went off the rails",
+  "A production outage you led the response on — timeline, decisions, follow-up",
+  "A difficult stakeholder, or pushing back on scope",
+  "A technical decision you got wrong and how you noticed",
+  "A time you successfully argued for tech debt or refactoring time",
+  "Growing or restructuring your team of 10 across 4 squads",
+  "Why you left NexKraft, what the study period was for, and why now"]],
+ ["Leadership questions specific to your NexKraft role",[
+  "How you ran sprint planning and estimation across 4 squads",
+  "How you set technical direction and got buy-in for it",
+  "How you did code review at scale without becoming the bottleneck",
+  "How you onboarded a new engineer",
+  "How you handled cross-team dependencies and blocked work",
+  "How you balanced delivery pressure against engineering quality",
+  "How you communicated risk upward to non-technical leadership",
+  "How you interviewed and hired engineers"]],
+ ["Delivery quality",[
+  "Every story written in STAR with a real number in the result",
+  "A 2-minute version and a 6-minute version of each story",
+  "All 14 recorded and listened back to at least once",
+  "Rambling and filler words cut — this is the most common reason strong engineers fail this round",
+  "10 reverse questions prepared, specific to each company",
+  "Answer ready for: &ldquo;you have been out of a full-time role since July 2024&rdquo;",
+  "Answer ready for: &ldquo;why should we hire you over a local candidate&rdquo;",
+  "Answer ready for: &ldquo;walk me through your visa situation&rdquo; — calm, factual, 30 seconds"]]]};
+
+const CORE = {
+title:"Core topics",
+intro:"Your original list, plus the gaps I flagged. A topic is done when you can explain it out loud for five minutes with no notes and survive two follow-ups.",
+groups:[
+ ["Java concurrency",[
+  "Thread lifecycle, ExecutorService, ThreadPoolExecutor parameters, pool sizing",
+  "Runnable vs Callable, Future, rejection policies, ThreadLocal leaks",
+  "Java Memory Model: volatile, happens-before, visibility vs atomicity vs ordering",
+  "Atomic classes, CAS, ABA problem, LongAdder, false sharing",
+  "synchronized vs ReentrantLock vs ReadWriteLock vs StampedLock",
+  "Deadlock, livelock, starvation — cause, detection, prevention",
+  "CompletableFuture, ForkJoinPool, parallel streams and when they hurt",
+  "Virtual threads: carrier threads, pinning, structured concurrency",
+  "Virtual threads vs reactive — argue both directions"]],
+ ["Modern Java",[
+  "Records, sealed classes, pattern matching for switch, text blocks",
+  "Optional used correctly, and the anti-patterns",
+  "Streams: collectors, grouping, custom collectors, lazy evaluation",
+  "Functional programming in Java: composition, immutability",
+  "Foreign Function &amp; Memory API",
+  "Data Oriented Programming",
+  "OpenRewrite for automated refactoring",
+  "What actually changed in the last two LTS releases"]],
+ ["JVM internals — the gap in your original list",[
+  "Heap structure, generational GC, minor vs major vs full",
+  "G1 vs ZGC vs Shenandoah and when to pick each",
+  "Stack vs heap vs metaspace, escape analysis",
+  "Heap dump analysis and finding a real memory leak",
+  "Thread dump reading and diagnosing a stuck thread",
+  "jstat, jmap, jcmd, async-profiler, flame graphs",
+  "Collections internals: HashMap resize and treeify, ConcurrentHashMap"]],
+ ["Spring",[
+  "IoC, bean lifecycle, scopes, AOP and proxy mechanics",
+  "@Transactional: propagation, isolation, self-invocation trap, rollback rules",
+  "Spring Data JPA: N+1, fetch strategies, @EntityGraph, projections",
+  "Hibernate caching, dirty checking, batch operations, lazy loading traps",
+  "Spring Security filter chain and the whole authentication flow",
+  "Method security, CSRF, CORS, stateless configuration",
+  "Spring Cloud: config server, service discovery, gateway, circuit breaker",
+  "Externalised configuration and profile management"]],
+ ["Database",[
+  "ACID in depth and all four isolation levels",
+  "Dirty, non-repeatable and phantom reads",
+  "MVCC, optimistic vs pessimistic locking, database deadlocks",
+  "Indexing: B-tree, composite order, covering, cardinality, write cost",
+  "EXPLAIN plans and query optimisation",
+  "Connection pooling and correct HikariCP sizing",
+  "How many concurrent users a system can hold, and what actually limits it",
+  "Polling vs change data capture vs transactional outbox",
+  "Replication, read replicas, failover, replication lag",
+  "Sharding, partitioning, consistent hashing, hot keys",
+  "SQL vs NoSQL decision with a defensible reason"]],
+ ["Distributed systems and Kafka — the gap in your original list",[
+  "CAP, PACELC, consistency models",
+  "Quorum, leader election, split brain, fencing tokens",
+  "Kafka: brokers, partitions, replicas, ISR, controller",
+  "Consumer groups, rebalancing, offset management, retention, log compaction",
+  "Idempotent producer, transactions, exactly-once, ordering guarantees",
+  "DLQ, poison messages, consumer lag, backpressure",
+  "Kafka Streams basics",
+  "Kafka vs RabbitMQ vs SQS — a defensible comparison"]],
+ ["Caching — missing from your original list",[
+  "Redis data structures and when each fits",
+  "Cache-aside vs write-through vs write-behind",
+  "Invalidation strategies, TTL design, cache stampede",
+  "Distributed locks and the Redlock debate",
+  "Redis persistence (RDB vs AOF), clustering, eviction policies"]],
+ ["HTTP and API design",[
+  "HTTP verbs, POST vs PUT vs PATCH, safe vs idempotent",
+  "Status codes and what each one really signals",
+  "The same request sent twice — idempotency keys and deduplication",
+  "Synchronous vs asynchronous request handling",
+  "An external API returning 429 — backoff, jitter, circuit breaking, queueing",
+  "API performance optimisation: payload size, compression, N+1 calls, batching",
+  "Pagination: offset vs cursor",
+  "API versioning strategies",
+  "gRPC vs REST vs GraphQL"]],
+ ["Security",[
+  "Identity and access management, RBAC vs ABAC, least privilege",
+  "JWT: structure, signing, claims, expiry, refresh rotation, common mistakes",
+  "OAuth2 flows: authorization code with PKCE, client credentials, device",
+  "OIDC vs OAuth2 vs SAML",
+  "Symmetric vs asymmetric crypto, TLS handshake, certificates, CA chain, mTLS",
+  "Secure cookies: HttpOnly, SameSite, Secure",
+  "OWASP Top 10 with a concrete fix for each",
+  "Secure configuration, secrets management, key rotation",
+  "Dependency scanning and supply chain risk",
+  "Penetration testing basics and threat modelling"]],
+ ["Resilience and observability",[
+  "Circuit breaker, retry with exponential backoff and jitter, bulkhead, timeout, fallback",
+  "Resilience4j in practice",
+  "Graceful degradation and designing for partial failure",
+  "Metrics vs logs vs traces, OpenTelemetry",
+  "RED and USE methods, SLI, SLO, error budget",
+  "Datadog, Dynatrace, New Relic, Grafana, Prometheus — what each is for",
+  "Alert design that does not wake people up for nothing"]],
+ ["Testing",[
+  "Test pyramid, unit vs integration boundaries",
+  "Testcontainers for real integration tests",
+  "Contract testing with Pact",
+  "Mutation testing",
+  "Smoke and regression suites in CI",
+  "Load testing with k6 or JMeter, and reading the results",
+  "Penetration testing basics",
+  "Your own real testing story from NexKraft, with numbers"]],
+ ["Cloud, containers and delivery",[
+  "SQS: visibility timeout, long polling, FIFO vs standard, DLQ",
+  "SNS and fan-out patterns",
+  "Lambda: cold starts, concurrency, limits, when serverless is wrong",
+  "EC2 vs ECS vs EKS, ALB, VPC basics, IAM roles",
+  "Docker: layers, multi-stage builds, image security",
+  "Kubernetes: pods, deployments, services, ingress, HPA, probes, ConfigMaps, secrets",
+  "Terraform basics",
+  "CI/CD design, blue-green vs canary vs rolling"]],
+ ["Networking — missing from your original list",[
+  "TCP vs UDP, three-way handshake, connection pooling and keep-alive",
+  "DNS resolution and caching",
+  "L4 vs L7 load balancing",
+  "What happens when you type a URL, end to end"]],
+ ["Runtimes and architecture",[
+  "Node event loop vs Java threading model",
+  "Netty and how non-blocking IO works underneath",
+  "Reactive WebFlux vs virtual threads",
+  "SOLID with your own code as the example, one per principle",
+  "The 12 design patterns that actually appear in interviews",
+  "Monolith vs microservices vs modular monolith — the honest tradeoffs",
+  "DDD, CQRS, event sourcing, saga",
+  "Strangler fig and legacy modernisation"]],
+ ["AI and LLM engineering — you are marketing this, so it will be probed",[
+  "RAG architecture end to end",
+  "Chunking strategies and overlap tuning",
+  "Embedding model selection and vector DB tradeoffs",
+  "Hybrid search and reranking",
+  "Evaluating a non-deterministic system — this is the question that separates people",
+  "Hallucination mitigation and guardrails",
+  "Agent architectures, tool calling, MCP, LangGraph state",
+  "Multi-agent coordination and its failure modes",
+  "Cost and latency optimisation for LLM backends",
+  "Prompt versioning and regression testing prompts",
+  "Spec-driven development with AI tooling in a real team"]]]};
+
+const JOB = {
+title:"Job search — United States and Canada",
+intro:"This track never pauses. You have been preparing without applying, and that is why nothing is converting. Five applications a day from Day 1.",
+groups:[
+ ["Immigration reality — handle this in week one",[
+  "Email your DSO at St. Cloud State about OPT unemployment days already used",
+  "Confirm whether time abroad while unemployed counts against your allowance",
+  "Confirm your STEM OPT extension eligibility and the filing window",
+  "Speak to an immigration attorney if the DSO answer is ambiguous",
+  "Decide your primary market based on that answer: US, Canada, or remote contracting",
+  "Build a list of cap-exempt US employers (universities, non-profit research, affiliated hospitals)"]],
+ ["Canada track",[
+  "Calculate your Express Entry CRS score honestly (age, education, IELTS 7, work experience)",
+  "Check whether a higher IELTS band would move your CRS meaningfully — retake if yes",
+  "Get an ECA (Educational Credential Assessment) started if you have not already",
+  "Understand the Global Talent Stream: LMIA-exempt, two-week processing, which employers use it",
+  "Look at provincial nominee tech streams: BC PNP Tech, OINP, Alberta",
+  "Reformat your resume for Canada: no photo, no date of birth, no marital status, no nationality",
+  "Decide how you answer &ldquo;are you legally authorised to work in Canada&rdquo; — honestly, and with your plan",
+  "Target cities: Toronto, Waterloo, Vancouver, Montreal, Calgary, Ottawa",
+  "Build a list of 25 Canadian employers: Shopify, Wealthsimple, Clio, 1Password, Faire, Later, Jane, Coveo, Kinaxis, Nuvei, OpenText, Dayforce, Telus, RBC, TD, Sun Life, Manulife, CGI, Benevity, Konrad, Ada, Vidyard, Docebo, Lightspeed, PointClickCare",
+  "Join Canadian tech communities and Slack groups where referrals actually happen"]],
+ ["United States track",[
+  "Build a list of 40 US targets across product companies, fintech and AI startups",
+  "Filter for companies with a history of sponsoring — check H-1B disclosure data",
+  "Tailor keywords per application so you clear the ATS",
+  "Prepare your answer for &ldquo;will you now or in the future require sponsorship&rdquo;",
+  "Keep the US phone number and a US-based address on the US resume"]],
+ ["Daily and weekly discipline",[
+  "5 tailored applications every working day",
+  "2 cold messages per day to engineers, not recruiters",
+  "1 LinkedIn post per week about what you learned that week",
+  "1 GitHub push per week — your profile is on your resume, keep it alive",
+  "Build a referral list of 40 people: NexKraft alumni, SCSU classmates, your BCI supervisor, Bangladeshi engineers at target companies",
+  "Message all 40 across the 8 weeks, not all at once",
+  "Follow up on every application after 10 days, once"]],
+ ["Before you accept anything",[
+  "Know the US senior/lead salary bands for your target cities",
+  "Know the Canadian bands — they are lower than US, budget for that mentally now",
+  "Script your answer to &ldquo;what are your expectations&rdquo; without naming a number first",
+  "Have your negotiation floor written down before the first call",
+  "Research your top 15 companies deeply: products, tech blog, recent news, who you know there"]]]};
+
+const SECTIONS = [
+ {id:"daily", label:"Daily plan", kind:"days"},
+ {id:"coding", label:"Coding", kind:"list", data:CODING},
+ {id:"design", label:"System design", kind:"list", data:DESIGN},
+ {id:"behav", label:"Behavioural", kind:"list", data:BEHAV},
+ {id:"core", label:"Core topics", kind:"list", data:CORE},
+ {id:"job", label:"Job search", kind:"list", data:JOB}
+];
+
+/* ============================== STATE ============================== */
+
+const KEY = "prep-tracker-v1";
+let state = {checked:{}, open:{}};
+let saveTimer = null;
+const $ = s => document.querySelector(s);
+
+function itemIds(){
+  const ids = [];
+  DAYS.forEach(d => d.i.forEach((_,k) => ids.push("d"+d.d+"-"+k)));
+  SECTIONS.filter(s=>s.kind==="list").forEach(s =>
+    s.data.groups.forEach((g,gi) => g[1].forEach((_,k) => ids.push(s.id+"-"+gi+"-"+k))));
+  return ids;
+}
+const ALL_IDS = itemIds();
+
+async function load(){
+  try{
+    const r = await window.storage.get(KEY);
+    if(r && r.value){ const p = JSON.parse(r.value); state.checked = p.checked||{}; state.open = p.open||{}; }
+  }catch(e){ /* first run, nothing stored */ }
+}
+function save(){
+  clearTimeout(saveTimer);
+  $("#save").textContent = "Saving…";
+  saveTimer = setTimeout(async ()=>{
+    try{ await window.storage.set(KEY, JSON.stringify(state)); $("#save").textContent = "Saved"; }
+    catch(e){ $("#save").textContent = "Not saved — progress is session-only"; }
+  }, 400);
+}
+
+/* ============================== RENDER ============================== */
+
+let active = "daily";
+
+function esc(s){ return s; }
+
+function lineHTML(id, track, text){
+  const on = state.checked[id] ? "1" : "0";
+  const tag = T[track] ? '<span class="tag '+track+'">'+T[track]+'</span>' : '';
+  return '<div class="line" data-id="'+id+'" data-on="'+on+'" role="checkbox" tabindex="0" aria-checked="'+(on==="1")+'">'
+       + '<span class="box"></span><span class="txt">'+text+'</span>'+tag+'</div>';
+}
+
+function renderDays(){
+  let h = '<div class="filters" id="filters">'
+        + '<button class="chip" data-f="all" data-on="1">Everything</button>'
+        + '<button class="chip" data-f="code" data-on="0">Coding only</button>'
+        + '<button class="chip" data-f="design" data-on="0">Design only</button>'
+        + '<button class="chip" data-f="core" data-on="0">Core topics only</button>'
+        + '<button class="chip" data-f="behav" data-on="0">Behavioural only</button>'
+        + '<button class="chip" data-f="job" data-on="0">Job search only</button>'
+        + '<button class="chip" data-f="todo" data-on="0">Unfinished only</button></div>';
+  let week = 0;
+  DAYS.forEach(day => {
+    if(day.w !== week){
+      week = day.w;
+      const wd = DAYS.filter(x=>x.w===week);
+      const tot = wd.reduce((a,x)=>a+x.i.length,0);
+      const dn = wd.reduce((a,x)=>a+x.i.filter((_,k)=>state.checked["d"+x.d+"-"+k]).length,0);
+      h += '<div class="weekhead"><h2>Week '+week+'</h2><span>'+weekName(week)+'</span>'
+         + '<span style="margin-left:auto;font-family:var(--mono);font-size:12px">'+dn+'/'+tot+'</span></div>';
+    }
+    const done = day.i.every((_,k)=>state.checked["d"+day.d+"-"+k]);
+    const n = day.i.filter((_,k)=>state.checked["d"+day.d+"-"+k]).length;
+    const open = state.open["d"+day.d] ? "1" : "0";
+    h += '<div class="day'+(done?" done":"")+(day.r?" rest":"")+'" data-day="'+day.d+'" data-open="'+open+'">'
+       + '<div class="dayhead" data-toggle="d'+day.d+'"><span class="dnum">D'+day.d+'</span>'
+       + '<span class="dtitle">'+day.t+'</span><span class="dcount">'+n+'/'+day.i.length+'</span>'
+       + '<span class="caret">&#9656;</span></div><div class="items">'
+       + day.i.map((it,k)=>lineHTML("d"+day.d+"-"+k, it[0], it[1])).join('')
+       + '</div></div>';
+  });
+  return h;
+}
+function weekName(w){
+  return ["Launch and Java concurrency","Modern Java and the JVM","Spring and databases",
+          "Distributed systems, Kafka, caching","Design depth and machine coding",
+          "Security, resilience, testing","Cloud, APIs and AI engineering",
+          "Consolidation and going loud"][w-1];
+}
+
+function renderList(sec){
+  const d = sec.data;
+  let h = '<div class="note"><strong>'+d.title+'</strong>'+d.intro+'</div>';
+  d.groups.forEach((g,gi)=>{
+    const ids = g[1].map((_,k)=>sec.id+"-"+gi+"-"+k);
+    const n = ids.filter(i=>state.checked[i]).length;
+    const open = state.open[sec.id+"-"+gi] ? "1" : "0";
+    h += '<div class="grp" data-open="'+open+'"><div class="grphead" data-toggle="'+sec.id+'-'+gi+'">'
+       + '<h3>'+g[0]+'</h3><span class="dcount">'+n+'/'+g[1].length+'</span><span class="caret">&#9656;</span></div>'
+       + '<div class="items">'+g[1].map((t,k)=>lineHTML(sec.id+"-"+gi+"-"+k,"",t)).join('')+'</div></div>';
+  });
+  return h;
+}
+
+function renderTabs(){
+  $("#tabs").innerHTML = SECTIONS.map(s=>{
+    const ids = ALL_IDS.filter(i => s.kind==="days" ? i[0]==="d" && /^d\d+-/.test(i) : i.startsWith(s.id+"-"));
+    const n = ids.filter(i=>state.checked[i]).length;
+    return '<button data-tab="'+s.id+'" aria-selected="'+(active===s.id)+'">'+s.label
+         + '<span class="cnt">'+n+'/'+ids.length+'</span></button>';
+  }).join('');
+}
+
+function renderPanel(){
+  const sec = SECTIONS.find(s=>s.id===active);
+  $("#panel").innerHTML = sec.kind==="days" ? renderDays() : renderList(sec);
+  applyFilter();
+}
+
+function renderMeter(){
+  const n = ALL_IDS.filter(i=>state.checked[i]).length;
+  const p = Math.round(n/ALL_IDS.length*100);
+  $("#pct").textContent = p+"%";
+  $("#pctlab").textContent = n+" of "+ALL_IDS.length+" items checked";
+  $("#barfill").style.width = p+"%";
+}
+
+function renderAll(){ renderTabs(); renderPanel(); renderMeter(); }
+
+/* ---------- filter ---------- */
+let filter = "all";
+function applyFilter(){
+  if(active!=="daily") return;
+  document.querySelectorAll("#panel .line").forEach(el=>{
+    const tagEl = el.querySelector(".tag");
+    const cls = tagEl ? tagEl.className.replace("tag","").trim() : "";
+    let show = true;
+    if(filter==="todo") show = el.dataset.on!=="1";
+    else if(filter!=="all") show = cls===filter;
+    el.style.display = show ? "" : "none";
+  });
+  document.querySelectorAll("#panel .day").forEach(d=>{
+    const any = [...d.querySelectorAll(".line")].some(l=>l.style.display!=="none");
+    d.style.display = any ? "" : "none";
+    if(filter!=="all" && any) d.dataset.open = "1";
+  });
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", e=>{
+  const tab = e.target.closest("[data-tab]");
+  if(tab){ active = tab.dataset.tab; filter="all"; renderAll(); window.scrollTo(0,0); return; }
+
+  const chip = e.target.closest(".chip");
+  if(chip){
+    filter = chip.dataset.f;
+    document.querySelectorAll(".chip").forEach(c=>c.dataset.on = c===chip ? "1":"0");
+    applyFilter(); return;
+  }
+
+  const tog = e.target.closest("[data-toggle]");
+  if(tog){
+    const k = tog.dataset.toggle;
+    state.open[k] = !state.open[k];
+    tog.parentElement.dataset.open = state.open[k] ? "1":"0";
+    save(); return;
+  }
+
+  const line = e.target.closest(".line");
+  if(line){ toggleLine(line); }
+});
+document.addEventListener("keydown", e=>{
+  if((e.key===" "||e.key==="Enter") && e.target.classList && e.target.classList.contains("line")){
+    e.preventDefault(); toggleLine(e.target);
+  }
+});
+function toggleLine(line){
+  const id = line.dataset.id;
+  state.checked[id] = !state.checked[id];
+  if(!state.checked[id]) delete state.checked[id];
+  save();
+  const sec = active;
+  renderPanel(); renderTabs(); renderMeter();
+}
+
+$("#reset").addEventListener("click", async ()=>{
+  if(!confirm("Clear every checkbox? This cannot be undone.")) return;
+  state = {checked:{}, open:{}};
+  try{ await window.storage.delete(KEY); }catch(e){}
+  renderAll();
+});
+
+/* ---------- boot ---------- */
+(async ()=>{
+  await load();
+  // open the first unfinished day by default
+  if(Object.keys(state.open).length===0){
+    const nxt = DAYS.find(d => d.i.some((_,k)=>!state.checked["d"+d.d+"-"+k]));
+    if(nxt) state.open["d"+nxt.d] = true;
+  }
+  renderAll();
+  $("#save").textContent = "Ready";
+})();
+</script>
